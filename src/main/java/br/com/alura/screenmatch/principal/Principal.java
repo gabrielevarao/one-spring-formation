@@ -3,6 +3,7 @@ package br.com.alura.screenmatch.principal;
 import br.com.alura.screenmatch.model.DadosSerie;
 import br.com.alura.screenmatch.model.DadosTemporada;
 import br.com.alura.screenmatch.model.Serie;
+import br.com.alura.screenmatch.service.ConsultaGemini;
 import br.com.alura.screenmatch.service.ConsumoApi;
 import br.com.alura.screenmatch.service.ConverteDados;
 
@@ -50,6 +51,7 @@ public class Principal {
                 case 0:
                     System.out.println("Saindo...");
                     break;
+
                 default:
                     System.out.println("Opção inválida");
             }
@@ -84,9 +86,9 @@ public class Principal {
     }
 
     private void listarSeriesBuscadas(){
-        List<Serie> series = new ArrayList<>();
+        List<Serie> series;
         series = dadoSeries.stream()
-                  .map(d -> new Serie(d))
+                  .map(Serie::new)
                   .collect(Collectors.toList());
 
         System.out.println("");
