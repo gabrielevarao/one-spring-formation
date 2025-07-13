@@ -2,20 +2,24 @@ package br.com.alura.screenmatch.service;
 
 import com.google.genai.Client;
 import com.google.genai.types.GenerateContentResponse;
+import io.github.cdimascio.dotenv.Dotenv;
 
 public class ConsultaGemini {
 
-    public static String obterTraducao(String texto){
-        Client client = Client.builder().apiKey("AIzaSyB6OHOJCFQVTKHbCYCoHNOwUDfOuOD8vIc").build();
-        String prompt = "Traduza para PT-BR a sinopse: " + texto;
+    Dotenv dotenv = Dotenv.configure().load();
+    Client client = Client.builder().apiKey(dotenv.get("GEMINI_API_KEY")).build();
+
+    public String obterTraducao(String texto){
+
+        String prompt = "Traduza o seguinte texto para português. Responda apenas com a tradução, sem explicações ou alternativas. " + texto;
 
         GenerateContentResponse response =
                 client.models.generateContent(
                         "gemini-2.0-flash-lite-001",
                         prompt,
-                        null
-                );
+                        null);
 
         return response.text();
     }
+
 }

@@ -3,9 +3,9 @@ package br.com.alura.screenmatch.principal;
 import br.com.alura.screenmatch.model.DadosSerie;
 import br.com.alura.screenmatch.model.DadosTemporada;
 import br.com.alura.screenmatch.model.Serie;
-import br.com.alura.screenmatch.service.ConsultaGemini;
 import br.com.alura.screenmatch.service.ConsumoApi;
 import br.com.alura.screenmatch.service.ConverteDados;
+import io.github.cdimascio.dotenv.Dotenv;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -14,12 +14,13 @@ import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public class Principal {
-
+    Dotenv dotenv = Dotenv.configure().load();
+    private final String GEMINI_API_KEY = dotenv.get("GEMINI_API_KEY");
     private Scanner leitura = new Scanner(System.in);
     private ConsumoApi consumo = new ConsumoApi();
     private ConverteDados conversor = new ConverteDados();
     private final String ENDERECO = "https://www.omdbapi.com/?t=";
-    private final String API_KEY = "&apikey=7b7cd39c";
+    private final String OMDB_API_KEY = dotenv.get("OMDB_API_KEY");
     private List<DadosSerie> dadoSeries = new ArrayList<>();
 
     public void exibeMenu() {
@@ -67,7 +68,7 @@ public class Principal {
     private DadosSerie getDadosSerie() {
         System.out.println("\nDigite o nome da série para busca");
         var nomeSerie = leitura.nextLine();
-        var json = consumo.obterDados(ENDERECO + nomeSerie.replace(" ", "+") + API_KEY);
+        var json = consumo.obterDados(ENDERECO + nomeSerie.replace(" ", "+") + OMDB_API_KEY);
         DadosSerie dados = conversor.obterDados(json, DadosSerie.class);
         return dados;
     }
@@ -77,7 +78,7 @@ public class Principal {
         List<DadosTemporada> temporadas = new ArrayList<>();
 
         for (int i = 1; i <= dadosSerie.totalTemporadas(); i++) {
-            var json = consumo.obterDados(ENDERECO + dadosSerie.titulo().replace(" ", "+") + "&season=" + i + API_KEY);
+            var json = consumo.obterDados(ENDERECO + dadosSerie.titulo().replace(" ", "+") + "&season=" + i + OMDB_API_KEY);
             DadosTemporada dadosTemporada = conversor.obterDados(json, DadosTemporada.class);
             temporadas.add(dadosTemporada);
         }
