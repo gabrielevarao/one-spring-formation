@@ -3,25 +3,33 @@ package br.com.alura.screenmatch.principal;
 import br.com.alura.screenmatch.model.DadosSerie;
 import br.com.alura.screenmatch.model.DadosTemporada;
 import br.com.alura.screenmatch.model.Serie;
+import br.com.alura.screenmatch.repository.SerieRepository;
 import br.com.alura.screenmatch.service.ConsumoApi;
 import br.com.alura.screenmatch.service.ConverteDados;
 import io.github.cdimascio.dotenv.Dotenv;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 
 public class Principal {
     Dotenv dotenv = Dotenv.configure().load();
-    private final String GEMINI_API_KEY = dotenv.get("GEMINI_API_KEY");
+
     private Scanner leitura = new Scanner(System.in);
     private ConsumoApi consumo = new ConsumoApi();
     private ConverteDados conversor = new ConverteDados();
     private final String ENDERECO = "https://www.omdbapi.com/?t=";
     private final String OMDB_API_KEY = dotenv.get("OMDB_API_KEY");
     private List<DadosSerie> dadoSeries = new ArrayList<>();
+    @Autowired
+    SerieRepository repository;
+
+    public Principal (SerieRepository serieRepository){
+        this.repository = serieRepository;
+    }
+
 
     public void exibeMenu() {
 
@@ -60,8 +68,8 @@ public class Principal {
     }
 
     private void buscarSerieWeb() {
-        DadosSerie dados = getDadosSerie();
-        dadoSeries.add(dados);
+        Serie dados = new Serie(getDadosSerie());
+        repository.save(dados);
         System.out.println("\n" + dados);
     }
 
@@ -87,10 +95,7 @@ public class Principal {
     }
 
     private void listarSeriesBuscadas(){
-        List<Serie> series;
-        series = dadoSeries.stream()
-                  .map(Serie::new)
-                  .collect(Collectors.toList());
+        List<Serie> series  = repository.findAll();
 
         System.out.println("");
         series.stream()
