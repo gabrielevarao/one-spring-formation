@@ -2,6 +2,7 @@ package br.com.alura.screenmatch.principal;
 
 import br.com.alura.screenmatch.model.DadosSerie;
 import br.com.alura.screenmatch.model.DadosTemporada;
+import br.com.alura.screenmatch.model.Episodio;
 import br.com.alura.screenmatch.model.Serie;
 import br.com.alura.screenmatch.repository.SerieRepository;
 import br.com.alura.screenmatch.service.ConsumoApi;
@@ -9,10 +10,8 @@ import br.com.alura.screenmatch.service.ConverteDados;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Principal {
     Dotenv dotenv = Dotenv.configure().load();
@@ -22,14 +21,15 @@ public class Principal {
     private ConverteDados conversor = new ConverteDados();
     private final String ENDERECO = "https://www.omdbapi.com/?t=";
     private final String OMDB_API_KEY = dotenv.get("OMDB_API_KEY");
-    private List<DadosSerie> dadoSeries = new ArrayList<>();
+
     @Autowired
-    SerieRepository repository;
+    SerieRepository serieRepository;
+
+    List<Serie> series;
 
     public Principal (SerieRepository serieRepository){
-        this.repository = serieRepository;
+        this.serieRepository = serieRepository;
     }
-
 
     public void exibeMenu() {
 
@@ -37,9 +37,15 @@ public class Principal {
         while (opcao != 0) {
             var menu = """
                     
-                    1 - Buscar séries
-                    2 - Buscar episódios
-                    3 - Listar séries buscadas
+                    ESCOLHA UMA OPÇÃO
+                    
+                    1 - Cadastrar uma nova série
+                    2 - Buscar episódios de uma série cadastrada
+                    3 - Listar séries cadastradas
+                    4 - Buscar uma série cadastrada por título
+                    5 - Buscar séries cadastradas filtrando por ator
+                    6 - Buscar o TOP 5 das séries cadastradas
+                    7 - Buscar séries cadastradas por categoria
                     
                     0 - Sair""";
 
@@ -49,13 +55,25 @@ public class Principal {
 
             switch (opcao) {
                 case 1:
-                    buscarSerieWeb();
+                    buscarNovaSerie();
                     break;
                 case 2:
                     buscarEpisodioPorSerie();
                     break;
                 case 3:
                     listarSeriesBuscadas();
+                    break;
+                case 4:
+                    buscarSeriePorTitulo();
+                    break;
+                case 5:
+                    buscarSeriesPorAtor();
+                    break;
+                case 6:
+                    buscarTop5Series();
+                    break;
+                case 7:
+                    buscarSeriesPorCategoria();
                     break;
                 case 0:
                     System.out.println("Saindo...");
@@ -67,9 +85,9 @@ public class Principal {
         }
     }
 
-    private void buscarSerieWeb() {
+    private void buscarNovaSerie() {
         Serie dados = new Serie(getDadosSerie());
-        repository.save(dados);
+        serieRepository.save(dados);
         System.out.println("\n" + dados);
     }
 
@@ -82,25 +100,88 @@ public class Principal {
     }
 
     private void buscarEpisodioPorSerie(){
-        DadosSerie dadosSerie = getDadosSerie();
-        List<DadosTemporada> temporadas = new ArrayList<>();
 
-        for (int i = 1; i <= dadosSerie.totalTemporadas(); i++) {
-            var json = consumo.obterDados(ENDERECO + dadosSerie.titulo().replace(" ", "+") + "&season=" + i + OMDB_API_KEY);
-            DadosTemporada dadosTemporada = conversor.obterDados(json, DadosTemporada.class);
-            temporadas.add(dadosTemporada);
+        System.out.println("\nEstas são as séries buscadas: ");
+        listarSeriesBuscadas();
+
+        System.out.println("\nAgora, digite o nome da série para buscar seus episódios: ");
+        String nomeSerie = leitura.nextLine();
+
+        Optional<Serie> serie = serieRepository.findByTituloContainingIgnoreCase(nomeSerie);
+
+        if (serie.isPresent()){
+
+            var serieEncontrada = serie.get();
+            List<DadosTemporada> temporadas = new ArrayList<>();
+
+            for (int i = 1; i <= serieEncontrada.getTotalTemporadas(); i++) {
+                var json = consumo.obterDados(ENDERECO +
+                                serieEncontrada.getTitulo().replace(" ", "+") +
+                                "&season=" + i + OMDB_API_KEY);
+                DadosTemporada dadosTemporada = conversor.obterDados(json, DadosTemporada.class);
+                temporadas.add(dadosTemporada);
+            }
+
+            temporadas.forEach(System.out::println);
+
+            List<Episodio> episodios = temporadas.stream()
+                    .flatMap(d -> d.episodios().stream()
+                            .map(e -> new Episodio(d.numero(), e)))
+                    .collect((Collectors.toList()));
+
+            serieEncontrada.setEpisodios(episodios);
+            serieRepository.save(serieEncontrada);
+        } else {
+            System.out.println("Série não encontrada.");
         }
-        System.out.println("\n");
-        temporadas.forEach(System.out::println);
     }
 
     private void listarSeriesBuscadas(){
-        List<Serie> series  = repository.findAll();
 
-        System.out.println("");
+        series = serieRepository.findAll();
         series.stream()
                 .sorted(Comparator.comparing(Serie::getGenero))
-                .forEach(System.out::println);
+                .forEach(System.out::print);
+    }
+
+    private void buscarSeriePorTitulo() {
+
+        System.out.println("\nEscolha uma série pelo nome: ");
+        String nomeSerie = leitura.nextLine();
+        Optional<Serie> serieBuscada = serieRepository.findByTituloContainingIgnoreCase(nomeSerie);
+
+        if(serieBuscada.isPresent()){
+            System.out.println("Dados da série: " + serieBuscada.get());
+        } else{
+            System.out.println("Série não encontrada!");
+        }
+    }
+
+    private void buscarSeriesPorAtor(){
+        System.out.println("\nDigite o nome do ator ou da atriz: ");
+        String nomeAtor = leitura.nextLine();
+
+        System.out.println("\nDeseja ver as séries que tenham uma nota a partir de que valor? \nDigite um número de 0 (muito mal avaliada) a 10 (muito bem avaliada).");
+        Double avaliacoes = leitura.nextDouble();
+
+        List<Serie> seriesEncontradas = serieRepository.findByAtoresContainingIgnoreCaseAndAvaliacaoGreaterThanEqual(nomeAtor, avaliacoes);
+
+        System.out.println("\nSéries com " + nomeAtor + ":");
+        seriesEncontradas.forEach(s ->
+                System.out.println("Nome: " + s.getTitulo() + " | Avaliação: " + s.getAvaliacao()));
+    }
+
+    private void buscarTop5Series(){
+        List<Serie> top5Series = serieRepository.findTop5ByOrderByAvaliacaoDesc();
+        System.out.println("");
+        top5Series.forEach(serie ->
+                System.out.println(">> " + serie.getTitulo() +
+                        "| Avaliação: " + serie.getAvaliacao()));
+
+    }
+
+    private void buscarSeriesPorCategoria(){
+
     }
 
 }

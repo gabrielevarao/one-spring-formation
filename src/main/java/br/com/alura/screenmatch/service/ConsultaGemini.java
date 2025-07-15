@@ -11,7 +11,7 @@ public class ConsultaGemini {
 
     public String obterTraducao(String texto){
 
-        String prompt = "Traduza o seguinte texto para português. Responda apenas com a tradução, sem explicações ou alternativas. " + texto;
+        String prompt = "Traduza o seguinte texto para português. Responda apenas com a tradução, sem explicações ou alternativas, em no máximo 250 caracteres. " + texto;
 
         GenerateContentResponse response =
                 client.models.generateContent(

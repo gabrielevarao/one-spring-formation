@@ -28,12 +28,10 @@ public class Serie {
     private String poster;
     private String sinopse;
 
-//    @JoinColumn()
-    @Transient
+    @OneToMany(mappedBy = "serie", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Episodio> episodios = new ArrayList<>();
 
     public Serie(){}
-
 
     public Serie (DadosSerie dadosSerie){
         ConsultaGemini consultaGemini = new ConsultaGemini();
@@ -115,17 +113,20 @@ public class Serie {
     }
 
     public void setEpisodios(List<Episodio> episodios) {
+        episodios.forEach(e-> e.setSerie(this));
         this.episodios = episodios;
     }
 
     @Override
     public String toString() {
-        return  "genero = " + genero +
-                ", titulo = " + titulo +
-                ", totalTemporadas = " + totalTemporadas +
-                ", avaliacao = " + avaliacao +
-                ", atores = " + atores +
-                ", poster = " + poster +
-                ", sinopse = " + sinopse;
+        return  "----------------------------------" +
+                "\nGênero = " + genero +
+                " \n-> Título = " + titulo +
+                " \n-> Total de temporadas = " + totalTemporadas +
+                " \n-> Avaliação = " + avaliacao +
+                " \n-> Atores = " + atores +
+                " \n-> Poster = " + poster +
+                " \n-> Sinopse = " + sinopse +
+                " \n-> Episódios = " + episodios + "\n";
     }
 }
