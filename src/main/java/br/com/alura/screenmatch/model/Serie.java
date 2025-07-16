@@ -119,7 +119,7 @@ public class Serie {
 
     @Override
     public String toString() {
-        return  "----------------------------------" +
+        return  "\n----------------------------------" +
                 "\nGênero = " + genero +
                 " \n-> Título = " + titulo +
                 " \n-> Total de temporadas = " + totalTemporadas +
@@ -127,6 +127,6 @@ public class Serie {
                 " \n-> Atores = " + atores +
                 " \n-> Poster = " + poster +
                 " \n-> Sinopse = " + sinopse +
-                " \n-> Total de episódios = " + episodios.stream().count() + "\n";
+                "-> Total de episódios = " + episodios.stream().count() + "\n";
     }
 }
