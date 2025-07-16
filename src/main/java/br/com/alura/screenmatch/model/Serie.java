@@ -127,6 +127,6 @@ public class Serie {
                 " \n-> Atores = " + atores +
                 " \n-> Poster = " + poster +
                 " \n-> Sinopse = " + sinopse +
-                " \n-> Episódios = " + episodios + "\n";
+                " \n-> Total de episódios = " + episodios.stream().count() + "\n";
     }
 }
