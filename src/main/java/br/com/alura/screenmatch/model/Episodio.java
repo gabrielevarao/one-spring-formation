@@ -100,7 +100,7 @@ public class Episodio {
 
     @Override
     public String toString() {
-        return  "\n Temporada = " + temporada +
+        return  "Temporada = " + temporada +
                 " || Número = " + numeroEpisodio +
                 " || Título = " + titulo +
                 " || Avaliação = " + avaliacao +
